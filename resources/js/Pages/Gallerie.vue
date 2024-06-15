@@ -131,22 +131,22 @@ function getPrevGalleryId() {
             <button @click="closeModal" class="fixed top-10 right-10 h-fit w-fit">
                 <i data-feather="x-circle" class="w-14 h-14 text-red-500"></i>
             </button>
-            <div class="w-full  md:w-3/6 px-5 flex justify-center items-center text-white space-x-4">
+            <div class="w-full md:w-3/6 px-5 flex justify-center items-center text-white space-x-4">
                 <button @click="getPrevGalleryId" class="h-fit">
                     <i data-feather="arrow-left-circle" class="w-10 h-10"></i>
                 </button>
                 <template v-if="modalImgBefore">
                     <ImgComparisonSlider>
-                        <img slot="first" class="aspect-square object-cover object-center"
+                        <img slot="first" class="aspect-[5/4] object-cover object-center"
                             :src="'/storage/' + modalImgBefore" />
-                        <img slot="second" class="aspect-square object-cover object-center"
+                        <img slot="second" class="aspect-[5/4] object-cover object-center"
                             :src="'/storage/' + modalImgAfter" />
                     </ImgComparisonSlider>
                 </template>
                 <template v-else>
-                    <div>
-                        <img :src="'/storage/' + modalImgAfter" class="block aspect-square object-cover object-center"
-                            @click="closeModal" />
+                    <div class="">
+                        <img :src="'/storage/' + modalImgAfter"
+                            class="block w-full aspect-[5/4] object-cover object-center" @click="closeModal" />
                     </div>
                 </template>
                 <button @click="getNextGalleryId" class="h-fit">

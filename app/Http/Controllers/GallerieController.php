@@ -67,7 +67,7 @@ class GallerieController extends Controller
     {
         $request->validate([
             'imgBefore' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'imgAfter' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'imgAfter' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'required|string'
         ]);
 

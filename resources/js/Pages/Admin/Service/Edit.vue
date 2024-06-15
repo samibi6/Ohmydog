@@ -6,9 +6,10 @@ import { ref } from "vue";
 
 const props = defineProps(['service']);
 
-const form = usePrecognitionForm("patch", route("service.update", { service: props.service.id }), {
+const form = usePrecognitionForm("post", route("service.update", { service: props.service.id }), {
     nom: props.service.nom,
     description: props.service.description,
+    _method: 'patch'
 });
 
 form.setValidationTimeout(300);

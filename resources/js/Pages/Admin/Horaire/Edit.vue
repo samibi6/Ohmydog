@@ -6,11 +6,12 @@ import { ref } from "vue";
 
 const props = defineProps(['horaire']);
 
-const form = usePrecognitionForm("patch", route("horaire.update", { horaire: props.horaire.id }), {
+const form = usePrecognitionForm("post", route("horaire.update", { horaire: props.horaire.id }), {
     jour: props.horaire.jour,
     ouvert: props.horaire.ouvert,
     heure_debut: props.horaire.heure_debut.slice(0, 5),
-    heure_fin: props.horaire.heure_fin.slice(0, 5)
+    heure_fin: props.horaire.heure_fin.slice(0, 5),
+    _method: 'patch'
 });
 
 form.setValidationTimeout(300);

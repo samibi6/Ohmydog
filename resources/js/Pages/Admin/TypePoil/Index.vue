@@ -29,6 +29,7 @@ const handleFileChange = async (event, field) => {
             const convertedBlob = await heic2any({
                 blob: file,
                 toType: 'image/jpeg',
+                quality: 0.3,
             });
             form[field] = new File([convertedBlob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
                 type: 'image/jpeg',

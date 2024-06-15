@@ -77,28 +77,39 @@ const tableau = computed(() => {
 </style>
 <template>
     <FrontLayout title="Tarifs" :page="$page" :canLogin="canLogin">
-        <div class="z-0 md:h-screen pt-40 pb-24 md:p-0 overflow-hidden flex items-center justify-center">
-            <div class="flex flex-col bg-white/60 rounded-3xl p-4 md:w-3/4 md:h-1/2 lg:w-1/2 lg:p-6">
+        <div class="z-0 md:min-h-screen pb-20 md:p-0 flex flex-col items-center justify-center">
+            <div
+                class="overflow-hidden md:overflow-visible flex flex-col bg-white/60 rounded-3xl p-0 mt-40 sm:p-4 md:w-3/4 xl:w-1/2 lg:p-6">
                 <h2 class="text-5xl drop-shadow-md pb-4 text-center lg:text-left">Tarifs</h2>
-                <div class="flex-grow bg-red-500">
-                    <table class="table-auto border-collapse w-full h-full bg-white">
+                <div class="flex-grow">
+                    <table class="border-b-0 table-auto border-collapse w-full h-full bg-white text-xs sm:text-base">
                         <thead>
                             <tr>
-                                <th class="px-4 py-2 border">Service / Taille</th>
-                                <th v-for="taille in tailles" :key="taille.id" class="px-4 py-2 border">{{ taille.nom }}
+                                <th class="px-2 sm:px-4 py-2 border font-bold">Service / Taille</th>
+                                <th v-for="taille in tailles" :key="taille.id"
+                                    class="px-2 sm:px-4 py-2 border font-bold md:text-lg">{{
+                                        taille.nom }}
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="service in services" :key="service.id">
-                                <td class="px-4 py-2 border">{{ service.nom }}</td>
-                                <td v-for="taille in tailles" :key="taille.id" class="px-4 py-2 border text-center">
+                                <td class="px-2 sm:px-4 py-2 border font-bold">{{ service.nom }}</td>
+                                <td v-for="taille in tailles" :key="taille.id"
+                                    class="px-2 sm:px-4 py-2 border text-center">
                                     {{ tableau[service.id].tarifs[taille.id] !== null ?
                                         tableau[service.id].tarifs[taille.id] + '€' : '-' }}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            <div v-for="service in services" class="justify-self-end mt-10">
+                <div v-if="service.description">
+                    <div><span class="font-bold">{{ service.nom + ' : ' }}</span><span class="text-sm italic">{{
+                            service.description }}</span>
+                    </div>
                 </div>
             </div>
         </div>

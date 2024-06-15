@@ -6,13 +6,14 @@ import { ref } from "vue";
 
 const props = defineProps(['reservation']);
 
-const form = usePrecognitionForm("patch", route("adminReservation.update", { reservation: props.reservation.id }), {
+const form = usePrecognitionForm("post", route("adminReservation.update", { reservation: props.reservation.id }), {
     user_id: props.reservation.user_id,
     date: props.reservation.date,
     heure: props.reservation.heure,
     poil_id: props.reservation.type_poil_id,
     duree_id: props.reservation.duree_id,
-    race: props.reservation.race
+    race: props.reservation.race,
+    _method: 'patch'
 });
 
 form.setValidationTimeout(300);

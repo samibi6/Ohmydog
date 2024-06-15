@@ -24,6 +24,9 @@ const form = usePrecognitionForm("post", route("dashboard.store"), {
     date: '',
     heure: '',
     heure_fin: '',
+    isPlage: '',
+    isAllday: '',
+    dateFin: '',
 });
 
 form.setValidationTimeout(300);
@@ -75,9 +78,10 @@ const paddedDays = computed(() => {
         const currentDate = new Date(props.year, props.month - 1, date);
         const dayOfWeek = currentDate.getDay();
         const isClosed = props.days[date - 1]?.isClosed || false; // Vérifier si le jour est fermé
-        const isHoliday = props.days[date - 1]?.isHoliday || false; // Vérifier si le jour est un jour férié
+        const isHoliday = props.days[date - 1]?.isHoliday || false;
+        const hasRdv = props.days[date - 1]?.hasRdv || false; // Vérifier si le jour est un jour férié
 
-        return { date, dayOfWeek, isClosed, isHoliday };
+        return { date, dayOfWeek, isClosed, isHoliday, hasRdv };
     });
 
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -144,15 +148,21 @@ function nextMonth() {
     }
 }
 
-function getDayClass(day) {
-    if (day.date === this.selectedDate) {
+function getDayClass(day, selectedDate) {
+    if (!day.date) {
+        return 'bg-none text-white font-bold cursor-not-allowed';
+    }
+    if (day.date === selectedDate) {
         return 'bg-blue-600 text-white font-bold';
     }
     if (day.isClosed) {
         return 'bg-red-500 cursor-not-allowed';
     }
     if (day.isHoliday) {
-        return 'bg-red-500 cursor-not-allowed';
+        return 'bg-gray-500 cursor-not-allowed';
+    }
+    if (day.hasRdv) {
+        return 'bg-white underline decoration-2 font-bold text-blue-500 cursor-pointer';
     }
     return 'bg-white cursor-pointer';
 }
@@ -183,6 +193,28 @@ const getUserById = (id) => {
     return userObj;
 };
 selectDate(day);
+function addDurations(time1, time2) {
+    // Extraire les heures et les minutes de la première durée
+    const [h1, m1] = time1.split(':').map(Number);
+    const totalMinutes1 = h1 * 60 + m1;
+
+    // Extraire les heures et les minutes de la deuxième durée
+    const [h2, m2] = time2.split(':').map(Number);
+    const totalMinutes2 = h2 * 60 + m2;
+
+    // Additionner les durées en minutes
+    const totalMinutes = totalMinutes1 + totalMinutes2;
+
+    // Convertir le total des minutes en format HH:MM
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    // Formater les heures et les minutes pour obtenir HH:MM
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+
+    return `${formattedHours}:${formattedMinutes}`;
+}
 </script>
 
 <template>
@@ -212,20 +244,45 @@ selectDate(day);
                 </div>
 
                 <div class="mb-5">
+                    <label for="plage" class="text-gray-700 mb-2 block font-medium">est plusieurs jours ?</label>
+                    <input type="checkbox" id="plage" v-model="form.isPlage" @change="form.validate('isPlage')"
+                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5" />
+                    <div v-if="form.invalid('isPlage')" class="text-sm text-red-600">
+                        {{ form.errors.isPlage }}
+                    </div>
+                </div>
+
+                <div class="mb-5" v-if="form.isPlage">
+                    <label for="dateFin" class="text-gray-700 mb-2 block font-medium">date de fin (comprise)</label>
+                    <input type="date" id="dateFin" v-model="form.dateFin" @change="form.validate('dateFin')"
+                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 w-full" />
+                    <div v-if="form.invalid('dateFin')" class="text-sm text-red-600">
+                        {{ form.errors.dateFin }}
+                    </div>
+                </div>
+
+                <div class="mb-5" v-if="!form.isPlage">
+                    <label for="isAllday" class="text-gray-700 mb-2 block font-medium">est toute la journée ?</label>
+                    <input type="checkbox" id="isAllday" v-model="form.isAllday" @change="form.validate('isAllday')"
+                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5" />
+                    <div v-if="form.invalid('isAllday')" class="text-sm text-red-600">
+                        {{ form.errors.isAllday }}
+                    </div>
+                </div>
+
+                <div class="mb-5" v-if="!form.isAllday && !form.isPlage">
                     <label for="heure" class="text-gray-700 mb-2 block font-medium">heure début:</label>
                     <input type="time" id="heure" v-model="form.heure" @change="form.validate('heure')"
-                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 w-full"
-                        required />
+                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 w-full" />
                     <div v-if="form.invalid('heure')" class="text-sm text-red-600">
                         {{ form.errors.heure }}
                     </div>
                 </div>
 
-                <div class="mb-5">
+                <div class="mb-5" v-if="!form.isAllday && !form.isPlage">
                     <label for="heure_fin" class="text-gray-700 mb-2 block font-medium">heure fin:</label>
                     <input type="time" id="heure_fin" v-model="form.heure_fin" @change="form.validate('heure_fin')"
-                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 w-full"
-                        required />
+                        class="bg-gray-200 focus:bg-gray-300 border border-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 w-full" />
                     <div v-if="form.invalid('heure_fin')" class="text-sm text-red-600">
                         {{ form.errors.heure_fin }}
                     </div>
@@ -262,7 +319,8 @@ selectDate(day);
                     <div class="font-bold text-center">Dim</div>
 
                     <div v-for="(day, index) in paddedDays" :key="index || day.placeholder"
-                        class="text-center py-4 lg:p-4 border border-black rounded" :class="getDayClass(day)"
+                        class="text-center py-4 lg:p-4 border border-black rounded"
+                        :class="getDayClass(day, selectedDate)"
                         @click="!day.isClosed && !day.isHoliday ? selectDate(day.date) : null">
                         <span v-if="day.date">{{ day.date }}</span>
                     </div>
@@ -270,29 +328,34 @@ selectDate(day);
             </div>
             <div v-if="selectedDate" class="mt-5 lg:w-1/2 p-5 bg-white/70 rounded-xl">
                 <h3 class="text-2xl mb-4">Rendez-vous du {{ selectedDate }}</h3>
-                <ul class="">
-                    <li v-for="time in RDV" :key="time.id" class="mr-4 mb-4 font-medium bg-white rounded-lg p-2">{{
-                        time.heure.slice(0, 5)
-                        + ' | Nom: '
-                        + getUserById(time.user_id).name
-                        + ' | Taille: '
-                        + getTailleById(getDureeById(time.duree_id).taille_id).nom
-                        + ' | Service: '
-                        + getServiceById(getDureeById(time.duree_id).service_id).nom
-                        + ' | Poil: '
-                        + getPoilById(time.type_poil_id).nom
-                        + ' | Etat: '
-                        + getEtatById(getDureeById(time.duree_id).etat_id).nom
-                        + ' | Race: '
-                        + time.race
-                        + ' | Durée: '
-                        + getDureeById(time.duree_id).duree.slice(0, 5)
-                        }}
+                <ul v-if="RDV && RDV.length > 0" class="">
+
+                    <li v-for="time in RDV" :key="time.id" class="mr-4 mb-4 font-medium bg-white rounded-lg p-2">
+                        <template v-if="typeof time === 'object'">
+                            <span class="text-xl" style="font-family: 'Lobster', sans-serif;">{{
+                                time.heure.slice(0, 5) + ' - ' + addDurations(time.heure.slice(0, 5),
+                                    getDureeById(time.duree_id).duree.slice(0, 5)) }}</span>
+                            {{ ' | Nom: '
+                                + getUserById(time.user_id).name
+                                + ' | Taille: '
+                                + getTailleById(getDureeById(time.duree_id).taille_id).nom
+                                + ' | Service: '
+                                + getServiceById(getDureeById(time.duree_id).service_id).nom
+                                + ' | Poil: '
+                                + getPoilById(time.type_poil_id).nom
+                                + ' | Etat: '
+                                + getEtatById(getDureeById(time.duree_id).etat_id).nom
+                                + ' | Race: '
+                                + time.race
+                                + ' | Durée: '
+                                + getDureeById(time.duree_id).duree.slice(0, 5)
+                            }}
+                        </template>
                     </li>
                 </ul>
             </div>
         </div>
-        <div>
+        <div class="pb-32">
             <h2 class="text-center text-3xl">Indisponibilités:</h2>
             <div v-for="indispo in indispos"
                 class="border-2 w-fit mx-auto flex justify-center items-center space-x-4 my-4 bg-white rounded-xl p-2">

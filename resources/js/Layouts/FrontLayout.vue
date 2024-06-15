@@ -61,7 +61,7 @@ html {
     <div v-if="isOpen" class="h-full w-full bg-pink-300/75 backdrop-blur-md fixed z-[100] overflow-hidden">
         <button @click="burger()" class="w-fit block ml-auto m-5">
             <svg class="drop-shadow-lg" xmlns="http://www.w3.org/2000/svg" fill="#fd2577" version="1.1" id="Capa_1"
-                width="60" height="60" viewBox="0 0 45 40" preserveAspectRatio="xMidYMid meet">
+                width="45" height="45" viewBox="0 0 45 40" preserveAspectRatio="xMidYMid meet">
                 <g>
                     <path class="text-red-500" d="M27.948,20.878L40.291,8.536c1.953-1.953,1.953-5.119,0-7.071c-1.951-1.952-5.119-1.952-7.07,0L20.878,13.809L8.535,1.465
 		c-1.951-1.952-5.119-1.952-7.07,0c-1.953,1.953-1.953,5.119,0,7.071l12.342,12.342L1.465,33.22c-1.953,1.953-1.953,5.119,0,7.071
@@ -95,9 +95,6 @@ html {
                     <div>
                         <div class="font-medium text-base text-white text-center">
                             {{ $page.props.auth.user.name }}
-                        </div>
-                        <div class="font-medium text-sm text-white text-center">
-                            {{ $page.props.auth.user.email }}
                         </div>
                     </div>
                 </div>

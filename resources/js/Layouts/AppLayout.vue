@@ -206,7 +206,9 @@ const logout = () => {
                                         <DropdownLink :href="route('user.reservations')">
                                             Mes Réservations
                                         </DropdownLink>
-
+                                        <DropdownLink :href="route('home')">
+                                            Page d'accueil
+                                        </DropdownLink>
                                         <DropdownLink v-if="$page.props.jetstream.hasApiFeatures"
                                             :href="route('api-tokens.index')">
                                             API Tokens
@@ -217,7 +219,7 @@ const logout = () => {
                                         <!-- Authentication -->
                                         <form @submit.prevent="logout">
                                             <DropdownLink as="button">
-                                                Log Out
+                                                Déconnexion
                                             </DropdownLink>
                                         </form>
                                     </template>
@@ -315,7 +317,9 @@ const logout = () => {
                                 :active="route().current('user.reservations')">
                                 Mes Réservations
                             </ResponsiveNavLink>
-
+                            <ResponsiveNavLink :href="route('home')" :active="route().current('home')">
+                                Page d'accueil
+                            </ResponsiveNavLink>
                             <ResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures"
                                 :href="route('api-tokens.index')" :active="route().current('api-tokens.index')">
                                 API Tokens
@@ -324,7 +328,7 @@ const logout = () => {
                             <!-- Authentication -->
                             <form method="POST" @submit.prevent="logout">
                                 <ResponsiveNavLink as="button">
-                                    Log Out
+                                    Déconnexion
                                 </ResponsiveNavLink>
                             </form>
 

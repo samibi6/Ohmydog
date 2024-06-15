@@ -6,9 +6,10 @@ import { ref } from "vue";
 
 const props = defineProps(['taille']);
 
-const form = usePrecognitionForm("patch", route("taille.update", { taille: props.taille.id }), {
+const form = usePrecognitionForm("post", route("taille.update", { taille: props.taille.id }), {
     nom: props.taille.nom,
     exemple: props.taille.exemple,
+    _method: 'patch'
 });
 
 form.setValidationTimeout(300);

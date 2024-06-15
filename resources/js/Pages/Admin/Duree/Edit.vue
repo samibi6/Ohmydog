@@ -6,11 +6,12 @@ import { ref } from "vue";
 
 const props = defineProps(['duree', 'services', 'tailles', 'etats']);
 
-const form = usePrecognitionForm("patch", route("duree.update", { duree: props.duree.id }), {
+const form = usePrecognitionForm("post", route("duree.update", { duree: props.duree.id }), {
     service_id: props.duree.service_id,
     taille_id: props.duree.taille_id,
     etat_id: props.duree.etat_id,
-    duree: props.duree.duree.slice(0, 5)
+    duree: props.duree.duree.slice(0, 5),
+    _method: 'patch'
 });
 
 form.setValidationTimeout(300);

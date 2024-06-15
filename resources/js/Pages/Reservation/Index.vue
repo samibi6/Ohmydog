@@ -98,7 +98,7 @@ function afficherService(service) {
         return false;
     } else if (nomPoil.includes('ras') && (nomService.includes('coupe') || nomService.includes('tonte') || nomService.includes('trim'))) {
         return false;
-    } else if (nomService.includes('trim')) {
+    } else if (nomService.includes('trim') && !nomPoil.includes('dur')) {
         return false;
     } else {
         return true;
@@ -138,7 +138,7 @@ const submit = async () => {
 </script>
 <template>
     <FrontLayout title="Réservation" :page="$page">
-        <div class="max-w-lg mx-auto pt-40 pb-28">
+        <div class="max-w-lg mx-auto pt-40 pb-28 min-h-screen">
             <h2 class="text-4xl text-center drop-shadow-lg pb-10">Réservation</h2>
 
             <!-- Sélection de la taille -->
@@ -146,8 +146,9 @@ const submit = async () => {
                 <label class="text-gray-800 mb-2 block font-bold">Sélectionnez une taille :</label>
                 <div v-for="taille in tailles" :key="taille.id"
                     class="flex items-center justify-between mb-2 bg-white/75 rounded-lg p-3">
-                    <div class="flex flex-wrap">
-                        <span>{{ taille.nom }}</span><span v-if="taille.exemple">{{ '(' + taille.exemple + ')' }}</span>
+                    <div class="flex flex-wrap space-x-4 items-center">
+                        <span>{{ taille.nom }}</span><span v-if="taille.exemple" class="italic text-sm">{{ '(' +
+                            taille.exemple + ')' }}</span>
                     </div>
                     <button @click="selectOption('taille_id', taille.id)"
                         class="text-white bg-blue-500 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2">
@@ -182,7 +183,8 @@ const submit = async () => {
                     Retour
                 </button>
             </div>
-            <div v-if="form.poil_id && step > 2" class="mb-5">
+            <div v-if="form.poil_id && step > 2 && !getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')"
+                class="mb-5">
                 {{ getNomByIdAndProp(form.poil_id, 'poils') }}
             </div>
 
@@ -191,12 +193,12 @@ const submit = async () => {
                 <div v-for="etat in etats" :key="etat.id">
                     <div class="flex items-center justify-between mb-2 bg-white/75 rounded-lg p-3"
                         v-if="afficherEtat(etat)">
-                        <div class="flex flex-wrap">
-                            <span>{{ etat.nom }}</span><span v-if="etat.description">{{
+                        <div class="flex flex-wrap space-x-4 items-center">
+                            <span>{{ etat.nom }}</span><span v-if="etat.description" class="italic text-sm">{{
                                 '(' +
                                 etat.description
                                 + ')'
-                            }}</span>
+                                }}</span>
                         </div>
                         <button @click="selectOption('etat_id', etat.id)"
                             class="text-white bg-blue-500 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2">
@@ -212,7 +214,8 @@ const submit = async () => {
                     Retour
                 </button>
             </div>
-            <div v-if="form.etat_id && step > 3 && getNomByIdAndProp(form.poil_id, 'poils') !== 'Dur'" class="mb-5">
+            <div v-if="form.etat_id && step > 3 && !getNomByIdAndProp(form.poil_id, 'poils').toLowerCase().includes('dur')"
+                class="mb-5">
                 {{ getNomByIdAndProp(form.etat_id, 'etats') }}
             </div>
 
@@ -222,8 +225,10 @@ const submit = async () => {
                 <div v-for="service in services" :key="service.id">
                     <div class="flex items-center justify-between mb-2 bg-white/75 rounded-lg p-3"
                         v-if="afficherService(service)">
-                        <div class="flex flex-wrap">
-                            <span>{{ service.nom }}</span><span v-if="service.description">{{ '(' + service.description
+                        <div class="flex flex-wrap space-x-4 items-center">
+                            <span>{{ service.nom }}</span><span v-if="service.description" class="italic text-sm">{{ '('
+                                +
+                                service.description
                                 +
                                 ')'
                                 }}</span>
@@ -242,10 +247,16 @@ const submit = async () => {
                     Retour
                 </button>
             </div>
-            <div v-if="form.service_id && step > 4" class="mb-5">
+            <div v-if="form.service_id && step > 4 && !getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')"
+                class="mb-5">
                 {{ getNomByIdAndProp(form.service_id, 'services') }}<br>
                 {{ 'Durée estimée: ' + form.duree.slice(0, 5) }}<br>
                 {{ 'Prix estimé: ' + getPrixByIds(form.taille_id, form.service_id) + '€' }}
+            </div>
+            <div
+                v-if="form.service_id && step > 4 && getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')">
+                {{ 'Durée estimée: ' + form.duree.slice(0, 5) }}<br>
+                {{ 'Prix estimé: ' + (form.duree.slice(0, 5) === '00:30' ? '15' : '25') + '€' }}
             </div>
             <div v-if="step === 5" class="mb-5">
                 <label v-if="!getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')" for="race"

@@ -10,6 +10,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TailleController;
 use App\Http\Controllers\TypePoilController;
 use App\Http\Controllers\UserController;
+use App\Models\Horaire;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +32,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'horaires' => Horaire::all()
     ]);
 })->name('home');
 

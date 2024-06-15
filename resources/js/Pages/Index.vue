@@ -2,7 +2,7 @@
 import FrontLayout from "@/Layouts/FrontLayout.vue";
 import { router } from '@inertiajs/vue3';
 import { useHead } from '@unhead/vue'
-defineProps({
+const props = defineProps({
     canLogin: {
         type: Boolean,
     },
@@ -18,6 +18,12 @@ defineProps({
         required: true,
     },
     user: null,
+    horaires: { type: Array },
+});
+props.horaires.forEach(horaire => {
+    // Extraire l'heure de début et de fin et les formater en hh:mm
+    horaire.heure_debut = horaire.heure_debut.slice(0, 5); // Format HH:MM
+    horaire.heure_fin = horaire.heure_fin.slice(0, 5); // Format HH:MM
 });
 useHead({
     title: 'Oh my dog - Salon de Toilettage Canin à Grand-Leez (Gembloux)',
@@ -50,12 +56,12 @@ useHead({
         <div class="z-0 h-screen overflow-hidden">
             <video
                 class="w-screen h-screen z-0 grayscale-[80%] brightness-[1] opacity-[60%] blur-[3px] object-cover hidden lg:block relative top-0"
-                autoplay loop muted>
+                autoplay loop muted playsinline data-wf-ignore="true">
                 <source src="/storage/home-video-w.mp4" type="video/mp4">
             </video>
             <video
                 class="w-screen z-0 grayscale-[80%] brightness-[1] opacity-[60%] blur-[3px] relative lg:hidden object-cover h-screen top-0"
-                autoplay loop muted>
+                autoplay loop muted playsinline data-wf-ignore="true">
                 <source src="/storage/home-video-m.mp4" type="video/mp4">
             </video>
             <div
@@ -101,6 +107,24 @@ useHead({
                     donc aux petits soins pour votre animal afin qu'il soit beau tout en privilégiant son bien être
                     !<br />
                     Je suis impatiente de le découvrir !</p>
+            </div>
+
+        </div>
+        <div>
+            <div class="py-16 w-fit mx-auto">
+                <h2 class="text-center text-5xl pb-8 drop-shadow-md">Horaires</h2>
+                <div v-for="horaire in horaires"
+                    class="w-full flex space-x-8 mb-4 justify-between items-center border-y-2 border-pink-300 bg-white/30 rounded-full px-4 shadow-md">
+                    <h2 class="text-2xl">{{ horaire.jour }}</h2>
+                    <div>
+                        <p class="text-center font-bold"
+                            :class="horaire.ouvert === 0 ? 'text-red-500' : 'text-green-500'">
+                            {{
+                                horaire.ouvert
+                                    === 0 ? 'Fermé' : 'Ouvert' }}</p>
+                        <p v-if="horaire.ouvert">{{ horaire.heure_debut + ' - ' + horaire.heure_fin }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </FrontLayout>

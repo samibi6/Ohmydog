@@ -92,8 +92,25 @@ class ReservationController extends Controller
             // Récupérer l'horaire pour ce jour
             $horaire = Horaire::where('jour', $jourEnFrancais)->first();
 
+            $hasRdv = false;
+
             // Vérifier si le jour est fermé
             $isClosed = !$horaire || !$horaire->ouvert;
+
+            if ($horaire->ouvert && !$isHoliday) {
+                $reservation = Reservation::where('date', $currentDate->toDateString())
+                    ->where('heure_fin', '!=', null)
+                    ->where('heure', '<=', $horaire->heure_debut)
+                    ->where('heure_fin', '>=', $horaire->heure_fin)->first();
+                $Rdv = Reservation::where('date', $currentDate->toDateString())
+                    ->where('heure_fin', null)->first();
+                if ($Rdv) {
+                    $hasRdv = true;
+                }
+                if ($reservation) {
+                    $isHoliday = true;
+                }
+            }
 
             // Ajouter les informations du jour à l'array $days
             $days[] = [
@@ -101,6 +118,7 @@ class ReservationController extends Controller
                 'dayOfWeek' => $currentDate->format('l'), // Nom complet du jour de la semaine
                 'isHoliday' => $isHoliday,
                 'isClosed' => $isClosed,
+                'hasRdv' => $hasRdv
             ];
         }
 
@@ -138,15 +156,93 @@ class ReservationController extends Controller
 
     public function storeUnavailable(Request $request)
     {
-        Reservation::create([
-            'user_id' => Auth::user()->id,
-            'date' => $request->input('date'),
-            'heure' => $request->input('heure'),
-            'heure_fin' => $request->input('heure_fin'),
-            'race' => 'Indisponibilité',
-            'type_poil_id' => 1,
-            'duree_id' => 1
-        ]);
+        if ($request->input('isPlage')) {
+            // Récupérer les dates du formulaire ou de la requête
+            $startDate = Carbon::parse($request->input('date'));
+            $endDate = Carbon::parse($request->input('dateFin'));
+
+            // Vérifier si la date de début est avant la date de fin
+            if ($startDate->gt($endDate)) {
+                return response()->json(['error' => 'La date de début doit être avant la date de fin.'], 400);
+            }
+
+            // Tableau associatif des jours de la semaine en français
+            $joursSemaine = [
+                0 => 'dimanche',
+                1 => 'lundi',
+                2 => 'mardi',
+                3 => 'mercredi',
+                4 => 'jeudi',
+                5 => 'vendredi',
+                6 => 'samedi',
+            ];
+
+            // Itérer entre les deux dates
+            for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+
+                // Récupérer le nom du jour en français
+                $jourEnFrancais = $joursSemaine[$date->dayOfWeek];
+
+                // Vérifier si le jour est ouvert dans la table Horaire
+                $horaire = Horaire::where('jour', $jourEnFrancais)->first();
+
+                $isHoliday = $this->isHoliday($date);
+
+                if ($horaire && $horaire->ouvert && !$isHoliday) {
+                    Reservation::create([
+                        'user_id' => Auth::user()->id,
+                        'date' => $date->format('Y-m-d'),
+                        'heure' => $horaire->heure_debut,
+                        'heure_fin' => $horaire->heure_fin,
+                        'race' => 'Indisponibilité',
+                        'type_poil_id' => 1,
+                        'duree_id' => 1
+                    ]);
+                }
+            }
+        } else if ($request->input('isAllday')) {
+
+            $dateRes = Carbon::parse($request->input('date'));
+
+            $joursSemaine = [
+                0 => 'dimanche',
+                1 => 'lundi',
+                2 => 'mardi',
+                3 => 'mercredi',
+                4 => 'jeudi',
+                5 => 'vendredi',
+                6 => 'samedi',
+            ];
+
+            // Récupérer le nom du jour en français
+            $jourEnFrancais = $joursSemaine[$dateRes->dayOfWeek];
+
+            $horaire = Horaire::where('jour', $jourEnFrancais)->first();
+
+            $isHoliday = $this->isHoliday($dateRes);
+
+            if ($horaire && $horaire->ouvert && !$isHoliday) {
+                Reservation::create([
+                    'user_id' => Auth::user()->id,
+                    'date' => $request->input('date'),
+                    'heure' => $horaire->heure_debut,
+                    'heure_fin' => $horaire->heure_fin,
+                    'race' => 'Indisponibilité',
+                    'type_poil_id' => 1,
+                    'duree_id' => 1
+                ]);
+            }
+        } else {
+            Reservation::create([
+                'user_id' => Auth::user()->id,
+                'date' => $request->input('date'),
+                'heure' => $request->input('heure'),
+                'heure_fin' => $request->input('heure_fin'),
+                'race' => 'Indisponibilité',
+                'type_poil_id' => 1,
+                'duree_id' => 1
+            ]);
+        }
         return Inertia::location(route('dashboard'));
     }
 
@@ -335,6 +431,16 @@ class ReservationController extends Controller
             // Initialiser un booléen pour indiquer si le jour est complet
             $isFull = false;
 
+            if ($horaire->ouvert && !$isHoliday) {
+                $reservation = Reservation::where('date', $currentDate->toDateString())
+                    ->where('heure_fin', '!=', null)
+                    ->where('heure', '<=', $horaire->heure_debut)
+                    ->where('heure_fin', '>=', $horaire->heure_fin)->first();
+                if ($reservation) {
+                    $isHoliday = true;
+                }
+            }
+
             // Si le jour n'est ni férié, ni fermé, ni passé, ni trop tardif, effectuer les vérifications pour déterminer si le jour est complet
             if (!$isHoliday && !$isClosed && !$isPast) {
                 // Récupérer tous les créneaux horaires disponibles pour ce jour
@@ -348,42 +454,70 @@ class ReservationController extends Controller
                 while ($openingTime->diffInMinutes($closingTime, false) >= $reservationDuration) {
                     // Ne pas ajouter de créneaux horaires dans le passé pour aujourd'hui
                     if ($currentDate->isToday() && $openingTime->lt($now) || $openingTime->lt($latestReservationTime)) {
-                        $openingTime->addMinutes(30);
+                        $openingTime->addMinutes(15);
                         continue;
                     }
 
                     $proposedEndTime = $openingTime->copy()->addMinutes($reservationDuration);
                     if ($proposedEndTime->lte($closingTime)) {
                         // Ajouter le créneau horaire seulement s'il ne dépasse pas l'heure de fermeture
-                        $availableTimes[] = $openingTime->copy();
+                        $availableTimes[] = $openingTime->copy()->toTimeString();
                     }
-                    $openingTime->addMinutes(30); // ou ajustez selon votre intervalle de temps
+                    $openingTime->addMinutes(15); // ou ajustez selon votre intervalle de temps
                 }
 
                 if (!empty($availableTimes)) {
+                    $nextRes = [];
                     // Récupérer toutes les réservations pour ce jour
                     $reservations = Reservation::whereDate('date', $currentDate)->get();
-
+                    $calcAvailableTimes = $availableTimes;
                     // Parcourir tous les créneaux horaires disponibles pour ce jour
                     foreach ($availableTimes as $time) {
+
                         // Vérifier si le créneau horaire est réservé pour la durée spécifiée
                         $isReserved = false;
                         foreach ($reservations as $reservation) {
+
                             $duree = Duree::find($reservation->duree_id);
                             $reservationStart = Carbon::createFromTimeString($reservation->heure);
-                            $reservationEnd = $reservationStart->copy()->addMinutes(Carbon::createFromFormat('H:i:s', $duree->duree)->hour * 60 + Carbon::createFromFormat('H:i:s', $duree->duree)->minute);
 
+                            if ($reservation->heure_fin === null) {
+                                $reservationEnd = $reservationStart->copy()->addMinutes(Carbon::createFromFormat('H:i:s', $duree->duree)->hour * 60 + Carbon::createFromFormat('H:i:s', $duree->duree)->minute);
+                            } else {
+                                $reservationEnd = Carbon::createFromTimeString($reservation->heure_fin);
+                            }
+
+                            if ($currentDate->toDateString() === '2024-06-26') {
+                                // dd(Carbon::createFromFormat('H:i:s', $time)->addMinutes($reservationDuration)->toTimeString());
+                            }
                             // Vérifier si le créneau horaire est déjà réservé
-                            if ($reservationStart <= $time && $time < $reservationEnd) {
+                            if ($reservationStart->toTimeString() <= $time && $time < $reservationEnd->toTimeString()) {
                                 $isReserved = true;
+                                $calcAvailableTimes = array_filter($calcAvailableTimes, function ($value) use ($time) {
+                                    return $value !== $time;
+                                });
                                 break;
                             }
                         }
+                        $nextRes = Reservation::where('date', $currentDate->toDateString())
+                            ->where('heure', '>', $time)
+                            ->orderBy('heure', 'asc')
+                            ->first();
                         // Si le créneau horaire n'est pas réservé, le jour n'est pas complet
                         if (!$isReserved) {
-                            $isFull = false;
-                            break;
+                            if (!$nextRes || Carbon::createFromFormat('H:i:s', $time)->addMinutes($reservationDuration)->toTimeString() <= $nextRes->heure) {
+                                $isFull = false;
+                            } else {
+                                $calcAvailableTimes = array_filter($calcAvailableTimes, function ($value) use ($time) {
+                                    return $value !== $time;
+                                });
+                            }
+
+                            // break;
                         }
+                        // $isFull = true;
+                    }
+                    if (empty($calcAvailableTimes)) {
                         $isFull = true;
                     }
                 } else {
@@ -549,8 +683,20 @@ class ReservationController extends Controller
 
         $horaires = Horaire::where('jour', $jourEnFrancais)->first();
 
+        $isHoliday = $this->isHoliday($dateCarbon);
+
+        if ($horaires->ouvert && !$isHoliday) {
+            $reservation = Reservation::where('date', $dateCarbon->toDateString())
+                ->where('heure_fin', '!=', null)
+                ->where('heure', '<=', $horaires->heure_debut)
+                ->where('heure_fin', '>=', $horaires->heure_fin)->first();
+            if ($reservation) {
+                $isHoliday = true;
+            }
+        }
+
         // Vérifier si le jour est ouvert
-        if (!$horaires || !$horaires->ouvert) {
+        if (!$horaires || !$horaires->ouvert || $isHoliday) {
             return response()->json(['message' => 'Fermé'], 200);
         }
 
@@ -575,10 +721,15 @@ class ReservationController extends Controller
                 foreach ($reservations as $reservation) {
                     $dureeRdv = Duree::find($reservation->duree_id);
                     $reservationStart = $dateCarbon->copy()->setTimeFromTimeString($reservation->heure);
-                    $reservationEnd = $reservationStart->copy()->addMinutes(
-                        Carbon::createFromFormat('H:i:s', $dureeRdv->duree)->hour * 60 +
-                            Carbon::createFromFormat('H:i:s', $dureeRdv->duree)->minute
-                    );
+
+                    if ($reservation->heure_fin === null) {
+                        $reservationEnd = $reservationStart->copy()->addMinutes(
+                            Carbon::createFromFormat('H:i:s', $dureeRdv->duree)->hour * 60 +
+                                Carbon::createFromFormat('H:i:s', $dureeRdv->duree)->minute
+                        );
+                    } else {
+                        $reservationEnd = $dateCarbon->copy()->setTimeFromTimeString($reservation->heure_fin);
+                    }
 
                     $proposedEnd = $openingTime->copy()->addMinutes($reservationDuration);
 
@@ -602,7 +753,7 @@ class ReservationController extends Controller
                 }
             }
             // Move to the next possible slot
-            $openingTime->addMinutes(30); // assuming you check every 30 minutes, you can adjust this value
+            $openingTime->addMinutes(15); // check every 15 minutes
 
             // Pour éviter une boucle infinie, vérifiez si $openingTime est toujours avant $closingTime
             if ($openingTime->greaterThanOrEqualTo($closingTime)) {

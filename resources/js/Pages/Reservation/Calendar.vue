@@ -126,20 +126,20 @@ const submit = () => {
 };
 
 function getDayClass(day) {
-    if (day.date === this.selectedDate) {
+    if (day.date === selectedDate.value) {
         return 'bg-blue-600 text-white font-bold';
     }
     if (day.isClosed) {
         return 'bg-red-500 cursor-not-allowed';
     }
     if (day.isHoliday) {
-        return 'bg-red-500 cursor-not-allowed';
+        return 'bg-orange-500 cursor-not-allowed';
     }
     if (day.isPast) {
         return 'bg-gray-500 cursor-not-allowed';
     }
     if (day.isFull && day.isTooLate) {
-        return 'bg-gradient-to-br cursor-not-allowed';
+        return 'bg-gray-500 cursor-not-allowed';
     }
     if (day.isFull) {
         return 'bg-gray-500 cursor-not-allowed';
