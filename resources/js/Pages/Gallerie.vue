@@ -137,10 +137,18 @@ function getPrevGalleryId() {
                 </button>
                 <template v-if="modalImgBefore">
                     <ImgComparisonSlider>
-                        <img slot="first" class="aspect-[5/4] object-cover object-center"
-                            :src="'/storage/' + modalImgBefore" />
-                        <img slot="second" class="aspect-[5/4] object-cover object-center"
-                            :src="'/storage/' + modalImgAfter" />
+                        <div slot="first" class="relative">
+                            <img class="aspect-[5/4] object-cover object-center" :src="'/storage/' + modalImgBefore" />
+                            <div
+                                class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-md text-lg">
+                                Avant</div>
+                        </div>
+                        <div slot="second" class="relative">
+                            <img class="aspect-[5/4] object-cover object-center" :src="'/storage/' + modalImgAfter" />
+                            <div
+                                class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-md text-lg">
+                                Après</div>
+                        </div>
                     </ImgComparisonSlider>
                 </template>
                 <template v-else>

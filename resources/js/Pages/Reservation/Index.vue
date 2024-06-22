@@ -198,7 +198,7 @@ const submit = async () => {
                                 '(' +
                                 etat.description
                                 + ')'
-                                }}</span>
+                            }}</span>
                         </div>
                         <button @click="selectOption('etat_id', etat.id)"
                             class="text-white bg-blue-500 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2">
@@ -260,17 +260,17 @@ const submit = async () => {
             </div>
             <div v-if="step === 5" class="mb-5">
                 <label v-if="!getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')" for="race"
-                    class="text-gray-800 mb-2 block font-bold">Quelle est la race de votre chien
-                    ?</label>
+                    class="text-gray-800 mb-2 block font-bold">Entrez la race et le nom de votre chien ainsi qu'une
+                    éventuelle remarque</label>
                 <div class="space-y-4 bg-white/75 p-4 rounded-lg flex flex-col">
-                    <input v-if="!getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')"
-                        type="text" id="race" v-model="form.race">
+                    <textarea v-if="!getNomByIdAndProp(form.taille_id, 'tailles').toLowerCase().includes('chat')"
+                        id="race" v-model="form.race"></textarea>
                     <div v-if="errors.race" class="text-sm text-red-600">
                         {{ errors.race }}
                     </div>
                     <button @click="submit" :disabled="processing"
                         class=" text-white bg-blue-500 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2 w-fit">
-                        Confirmer et envoyer
+                        Confirmer, vers agenda
                     </button>
                     <button @click="back()"
                         class="text-white bg-red-500 hover:bg-red-700 font-medium rounded-lg text-sm px-4 py-2 w-fit">
